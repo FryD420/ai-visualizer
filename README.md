@@ -27,6 +27,8 @@ That starts the server and opens the default face (the board, unless you change 
 
 **The easy way to configure it:** open this folder in Claude Code and say *"read ai-visualizer.md and set me up."* The wizard picks your face, your agent's name, and wires your voice line with you.
 
+**Already inside a Claude Code session?** One sentence does the whole install: *"clone https://github.com/jaredrhod/ai-visualizer.git, then read ai-visualizer/ai-visualizer.md and set me up."* Your agent clones it, runs the wizard, and wires it in for you.
+
 **The manual way:** edit `ai-visualizer.json`. Set `name` to your agent's name (it goes on the chip and in every HUD), and `face` to the one the root URL should open.
 
 ## See it perform with no voice line
