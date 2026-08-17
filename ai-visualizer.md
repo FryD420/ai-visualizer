@@ -10,13 +10,13 @@ A folder of self-contained browser faces plus one standard-library Python server
 
 Check that Python 3 exists (`python3 --version`, or on Windows `py --version` then `python --version`). If it's missing, help them install it before anything else.
 
-Start the server (`./run.sh` on Mac and Linux, `run.bat` or `python server.py` on Windows) and confirm the gallery opens at the printed URL. Leave it running.
+Start the server (`./run.sh` on Mac and Linux, `run.bat` or `python server.py` on Windows) and confirm the configured face opens in the browser; the server prints both the root URL and the page it opens. Leave it running.
 
 ## Phase 2: Pick the face and the name
 
 Ask what their agent is called (that name goes on the chip and in every HUD; the default is JARVIS) and set `"name"` in `ai-visualizer.json`.
 
-Send them to the gallery and have them click through the demos. Ask which face should be the default and set `"face"` to its folder name: `board`, `radial`, `rain`, or `neural`. If they have a handle they want in the neural core's chrome, set `"badge"`; otherwise leave it empty.
+Send them to the gallery (the root URL) and have them click through the demos. Ask which face should be the default and set `"face"` to its folder name: `board`, `radial`, `rain`, or `neural`. If they have a handle they want in the neural core's chrome, set `"badge"`; otherwise leave it empty.
 
 If they pick the rain face, offer the swap: any portrait on a black background dropped in as `assets/face.png` becomes the face in the code.
 

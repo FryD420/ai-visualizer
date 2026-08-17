@@ -23,7 +23,7 @@ cd ai-visualizer
 ./run.sh
 ```
 
-That starts the server and opens the gallery. Python 3 is the only requirement, and it ships with macOS and most Linux systems. On Windows, run `run.bat` (or `python server.py`) in this folder.
+That starts the server and opens the default face (the board, unless you change `face` in the config). The gallery of all four faces stays at the root URL. Python 3 is the only requirement, and it ships with macOS and most Linux systems. On Windows, run `run.bat` (or `python server.py`) in this folder.
 
 **The easy way to configure it:** open this folder in Claude Code and say *"read ai-visualizer.md and set me up."* The wizard picks your face, your agent's name, and wires your voice line with you.
 
