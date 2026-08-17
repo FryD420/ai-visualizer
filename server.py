@@ -222,8 +222,11 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     mode = f"MOCK={MOCK}" if MOCK else f"bus: {BUS}"
-    url = f"http://127.0.0.1:{PORT}/"
-    print(f"ai-visualizer on {url}  ({mode})  Ctrl-C stops")
+    root = f"http://127.0.0.1:{PORT}/"
+    # The browser opens on the configured face; the gallery stays at "/" for switching.
+    face = CFG.get("face", "")
+    url = f"{root}faces/{face}/" if face and (HERE / "faces" / face / "index.html").exists() else root
+    print(f"ai-visualizer on {root}  opening {url}  ({mode})  Ctrl-C stops", flush=True)
     srv = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
     srv.allow_reuse_address = True
     if not NO_OPEN:
