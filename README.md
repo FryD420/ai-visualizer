@@ -78,6 +78,15 @@ Each face is a browser page, so OBS takes it as a browser source pointed at the 
 
 The VT323 typeface by Peter Hull, licensed under the SIL Open Font License 1.1 (see `assets/VT323-OFL.txt`). Everything else here is hand-rolled canvas code with zero dependencies.
 
+## The rest of it
+
+A face is better with a voice behind it. The visualizer performs your real conversations only when a voice line is wired in, and the agent doing the talking is only as good as the memory behind it.
+
+- **The whole stack, one command.** [fullstack-agent](https://github.com/jaredrhod/fullstack-agent) installs the memory, the voice, the face, and the hands, and wires them together for you. Pick only the pieces you want: https://jaredrhod.com
+- **The videos.** Free series on all of it: https://youtube.com/@jaredrhod
+- **The Discord.** Thousands of builders, and the fastest place to get unstuck: https://discord.gg/YSdsqMv3V8
+- **Everything else,** free and open source: https://jaredrhod.com
+
 ## Support
 
 Free to use, and always will be. If this helped you out, you can buy me a coffee:
