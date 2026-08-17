@@ -6,6 +6,10 @@ The visualizer from my videos. Not a lookalike and not a prompt that asks your A
 
 There is nothing to install. The whole thing is a folder of web pages and one tiny Python server that uses only the standard library. If your machine can open a browser, it can run this.
 
+**Watch it in action:**
+
+[![ai-visualizer demo video](https://img.youtube.com/vi/6Tb41ORADgs/maxresdefault.jpg)](https://youtu.be/6Tb41ORADgs)
+
 ## The four faces
 
 - **The Circuit Board.** A full-bleed procedural PCB with your agent's name on the center chip. Data pulses stream the traces, components flash as signals hit them, and the whole board reverses flow when it listens to you. Press Space for a live cinematic flythrough of the board while it works.
