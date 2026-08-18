@@ -114,7 +114,8 @@ SPDX-License-Identifier: AGPL-3.0-or-later
    board amps up, riding one eased energy curve (no jump cuts).
    Driven by the voice bus through core.js (AV.state / AV.level).
    Space = the LIVE CINEMATIC flythrough (again = bail out); C = same.
-   F = fps. ?demo=1 self-runs. ?shot=idle|thinking|speaking[&cine=1]
+   F = fullscreen; the fps meter is ?fps=1. ?demo=1 self-runs.
+   ?shot=idle|thinking|speaking[&cine=1]
    &t=ms -> deterministic still for verification.
    ============================================================ */
 
@@ -1025,7 +1026,7 @@ function resize(){
 window.addEventListener("resize",resize);
 resize();
 
-/* fps meter (F key or ?fps=1) */
+/* fps meter (?fps=1) */
 let fpsEl=null,fpsAcc=0,fpsN=0;
 function fpsToggle(on){
   if(on&&!fpsEl){fpsEl=document.createElement("div");
@@ -1040,7 +1041,10 @@ if(Q.get("fps")==="1")fpsToggle(true);
 addEventListener("keydown",e=>{
   if(e.code==="Space"){e.preventDefault();cine?endCine():startCine();}
   if(e.key==="c"||e.key==="C"){cine?endCine():startCine();}
-  if(e.key==="f"||e.key==="F"){fpsToggle(!(fpsEl&&fpsEl.dataset.on));}
+  if(e.key==="f"||e.key==="F"){
+    document.fullscreenElement?document.exitFullscreen()
+      :document.documentElement.requestFullscreen();
+  }
 });
 
 if(SHOT){

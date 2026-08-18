@@ -196,7 +196,7 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/":
             path = "/index.html"
         target = (HERE / path.lstrip("/")).resolve()
-        if not str(target).startswith(str(HERE)):
+        if target != HERE and HERE not in target.parents:
             self._send(b"not found", "text/plain", 404)
             return
         if target.is_dir():

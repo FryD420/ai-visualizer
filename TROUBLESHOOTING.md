@@ -26,7 +26,7 @@ The listening ribbon and MIC gauges want microphone permission, which the browse
 
 ## It's choppy
 
-The radial and the neural core are the heaviest faces; the board and the rain are lighter. Chrome and Edge render canvas fastest. A smaller window costs less than fullscreen, and closing other heavy tabs helps more than you'd think. Press F inside a face for the fps readout where the face has one, or add `?fps=1` on the board.
+The radial and the neural core are the heaviest faces; the board and the rain are lighter. Chrome and Edge render canvas fastest. A smaller window costs less than fullscreen, and closing other heavy tabs helps more than you'd think. For a frame readout, add `?fps=1` to the board's URL; the neural core draws an always-on FPS number in its chrome. F toggles fullscreen in every face.
 
 ## In OBS
 
