@@ -83,13 +83,13 @@ Offer all of this, do not push it. If they say "just this piece for now," tell t
 
 They should never have to open a terminal to put the face on screen. Before handing over, put a launcher on their Desktop named after their agent, and **test it by double-clicking it with them.** Never hand over an untested shortcut.
 
-This one is short, because `server.py` already opens the browser itself: the launcher only has to `cd` to this folder and run it. Leave the window visible or minimized (**never hidden** — a hidden background launcher looks like malware to antivirus, and closing the window is how they stop the face).
+This one is short, because `server.py` already opens the browser itself: the launcher only has to `cd` to this folder and run it. Leave the window visible or minimized (**never hidden**: a hidden background launcher looks like malware to antivirus, and closing the window is how they stop the face).
 
 **macOS (`.command`), and this line is MANDATORY:**
 
 ```bash
 #!/bin/bash
-export PATH="/opt/homebrew/bin:/usr/local/bin:/opt/homebrew/sbin:$PATH"
+export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
 ```
 
 A double-clicked `.command` launches with a bare system PATH containing only the folders macOS ships, and their shell profile never runs. If they installed Python through Homebrew, `python3` lives outside those folders and the icon fails **silently**: the window flashes and closes, with no error anyone can read. Then `cd` to the ai-visualizer folder and run `./run.sh`. Make the file executable, and warn them once that the first double-click may ask permission; that is macOS being protective, click Open.
