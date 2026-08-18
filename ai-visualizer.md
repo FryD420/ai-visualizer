@@ -79,6 +79,27 @@ Tell them what to expect: a fresh Claude Code session opens with the installer a
 
 Offer all of this, do not push it. If they say "just this piece for now," tell them good choice and get out of the way.
 
+## Phase 5.75: Leave them an icon
+
+They should never have to open a terminal to put the face on screen. Before handing over, put a launcher on their Desktop named after their agent, and **test it by double-clicking it with them.** Never hand over an untested shortcut.
+
+This one is short, because `server.py` already opens the browser itself: the launcher only has to `cd` to this folder and run it. Leave the window visible or minimized (**never hidden** — a hidden background launcher looks like malware to antivirus, and closing the window is how they stop the face).
+
+**macOS (`.command`), and this line is MANDATORY:**
+
+```bash
+#!/bin/bash
+export PATH="/opt/homebrew/bin:/usr/local/bin:/opt/homebrew/sbin:$PATH"
+```
+
+A double-clicked `.command` launches with a bare system PATH containing only the folders macOS ships, and their shell profile never runs. If they installed Python through Homebrew, `python3` lives outside those folders and the icon fails **silently**: the window flashes and closes, with no error anyone can read. Then `cd` to the ai-visualizer folder and run `./run.sh`. Make the file executable, and warn them once that the first double-click may ask permission; that is macOS being protective, click Open.
+
+**Windows (`.bat`):** `cd /d` to the ai-visualizer folder and run `run.bat`. Windows `.bat` files inherit the user's PATH, so no export is needed there.
+
+**Do NOT set this to run at login.** A server starting on every boot for someone who may want the face occasionally is presumptuous, and a hidden autostart entry is exactly the shape antivirus flags. The icon is the whole feature: they click it when they want the face.
+
+If they already installed through fullstack-agent, they have these shortcuts already; skip this phase rather than making a second set.
+
 ## Phase 6: Hand it over
 
 Show them the keys (F for fullscreen, Space for the board's cinematic flythrough), the SND toggle on mouse move, and where the config lives. If they stream, point them at the OBS section in the README. Then get out of the way: the face runs itself from here.
