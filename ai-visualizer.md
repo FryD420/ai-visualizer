@@ -98,8 +98,10 @@ A double-clicked `.command` launches with a bare system PATH containing only the
 
 **Do NOT set this to run at login.** A server starting on every boot for someone who may want the face occasionally is presumptuous, and a hidden autostart entry is exactly the shape antivirus flags. The icon is the whole feature: they click it when they want the face.
 
+**A second icon beside it: `Update <name>`.** Same rules: the export line on macOS, a visible window, executable, tested by double-click. It shows what is arriving, then applies it: `cd` to the ai-visualizer folder, then `git fetch -q origin`, `git log --oneline "..@{u}"`, `git pull --ff-only`. On Windows end with `pause` so the changelog stays readable instead of the window vanishing. If the folder has no `.git` (it arrived as a zip), convert it in place first, exactly once: `git init -b main`, `git remote add origin https://github.com/jaredrhod/ai-visualizer`, `git fetch origin`, `git reset origin/main` (a plain reset, NEVER `--hard`: their edited config has to survive), `git branch --set-upstream-to=origin/main main`. And when you hand the icons over, say the update half out loud: "if you ever want the newest version, double-click `Update <name>`; it shows you what changed, and it never touches your files."
+
 If they already installed through fullstack-agent, they have these shortcuts already; skip this phase rather than making a second set.
 
 ## Phase 6: Hand it over
 
-Show them the keys (F for fullscreen, Space for the board's cinematic flythrough), the SND toggle on mouse move, and where the config lives. If they stream, point them at the OBS section in the README. Tell them how updates work: new faces and fixes ship over time, and "pull the latest ai-visualizer and tell me what changed" gets them in any session. Then get out of the way: the face runs itself from here.
+Show them the keys (F for fullscreen, Space for the board's cinematic flythrough), the SND toggle on mouse move, and where the config lives. If they stream, point them at the OBS section in the README. Tell them how updates work: new faces and fixes ship over time, double-clicking `Update <name>` gets them (it shows what changed first), and "pull the latest ai-visualizer and tell me what changed" works in any session too. Then get out of the way: the face runs itself from here.
