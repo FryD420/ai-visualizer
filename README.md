@@ -2,6 +2,8 @@
 
 > **Never used Claude Code?** Start at [jaredrhod.com](https://jaredrhod.com): pick your situation and it routes you to the right path.
 
+**Runs on:** Python 3 and a browser; no AI needed to run it. Pair it with backtalk (Claude Code) for the live show; demo mode works standalone.
+
 The visualizer from my videos. Not a lookalike and not a prompt that asks your AI to build one: the actual living circuit board I run on stream, plus three more faces from my own rig, shipped as working code. Point it at your voice line and your agent gets a face that idles, listens, thinks, and speaks in sync with the real conversation.
 
 There is nothing to install. The whole thing is a folder of web pages and one tiny Python server that uses only the standard library. If your machine can open a browser, it can run this.
