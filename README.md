@@ -35,7 +35,7 @@ That starts the server and opens the default face (the board, unless you change 
 
 **Already in a Claude Code session with your agent?** One sentence does the whole install: *"clone https://github.com/jaredrhod/ai-visualizer.git, then read ai-visualizer/ai-visualizer.md and set me up."* Your agent clones it, runs the wizard, and wires it in for you.
 
-**The manual way:** edit `ai-visualizer.json`. Set `name` to your agent's name (it goes on the chip and in every HUD), and `face` to the one the root URL should open.
+**The manual way:** copy `ai-visualizer.json.example` to `ai-visualizer.json` (your copy is untracked, so updates never touch it), then edit it. Set `name` to your agent's name (it goes on the chip and in every HUD), and `face` to the one the root URL should open.
 
 ## See it perform with no voice line
 
@@ -82,7 +82,7 @@ The VT323 typeface by Peter Hull, licensed under the SIL Open Font License 1.1 (
 
 ## Updating
 
-The visualizer improves continuously, and new faces are planned. To update, say to your agent: **"pull the latest ai-visualizer and tell me what changed."** Or run `git pull` in this folder yourself. Your config and any custom faces you added stay untouched. Installed through fullstack-agent? `./fullstack-agent/update.sh` updates every piece at once and prints what changed.
+The visualizer improves continuously, and new faces are planned. To update, double-click the `Update` icon setup left on your Desktop, or run `./update.sh` (`update.bat` on Windows) in this folder: either shows you what changed before applying it. Saying **"pull the latest ai-visualizer and tell me what changed"** to your agent works too. Your config and any custom faces you added stay untouched. Installed through fullstack-agent? `./fullstack-agent/update.sh` updates every piece at once and prints what changed.
 
 ## The rest of it
 

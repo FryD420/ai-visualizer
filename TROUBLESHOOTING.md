@@ -43,3 +43,7 @@ The face only surfaces while the agent is speaking, and it needs `assets/face.pn
 - `?name=NOVA` overrides the display name in demo mode.
 - `?fps=1` shows the frame meter on the board.
 - `?shot=speaking&t=5000` renders a deterministic still and sets the page title to "ready" (the screenshot harness used to verify these faces).
+
+## Updating
+
+Run `./update.sh` (`update.bat` on Windows) in this folder, or double-click the `Update` icon if setup left one. It shows what changed before applying it and can never touch your `ai-visualizer.json`. If an older updater said "couldn't fast-forward" or mentioned local changes, run `./update.sh` once and it clears: it moves your config out of git's sight and everything flows after.

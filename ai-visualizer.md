@@ -4,7 +4,7 @@ You are the user's Claude Code agent, and you are about to give yourself a face.
 
 ## What you are setting up
 
-A folder of self-contained browser faces plus one standard-library Python server (`server.py`). The server reads a tiny signal bus (`.voice_state`, `.voice_waveform`, `.voice_loading_pid`) and the faces animate from it. There are no dependencies to install. Configuration lives in `ai-visualizer.json`.
+A folder of self-contained browser faces plus one standard-library Python server (`server.py`). The server reads a tiny signal bus (`.voice_state`, `.voice_waveform`, `.voice_loading_pid`) and the faces animate from it. There are no dependencies to install. Configuration lives in `ai-visualizer.json`; if it doesn't exist yet, create it by copying `ai-visualizer.json.example` (their copy is deliberately untracked, so updates can never touch it).
 
 ## Phase 1: Prove the install
 
@@ -98,7 +98,7 @@ A double-clicked `.command` launches with a bare system PATH containing only the
 
 **Do NOT set this to run at login.** A server starting on every boot for someone who may want the face occasionally is presumptuous, and a hidden autostart entry is exactly the shape antivirus flags. The icon is the whole feature: they click it when they want the face.
 
-**A second icon beside it: `Update <name>`.** Same rules: the export line on macOS, a visible window, executable, tested by double-click. It shows what is arriving, then applies it: `cd` to the ai-visualizer folder, then `git fetch -q origin`, `git log --oneline "..@{u}"`, `git pull --ff-only`. On Windows end with `pause` so the changelog stays readable instead of the window vanishing. If the folder has no `.git` (it arrived as a zip), convert it in place first, exactly once: `git init -b main`, `git remote add origin https://github.com/jaredrhod/ai-visualizer`, `git fetch origin`, `git reset origin/main` (a plain reset, NEVER `--hard`: their edited config has to survive), `git branch --set-upstream-to=origin/main main`. And when you hand the icons over, say the update half out loud: "if you ever want the newest version, double-click `Update <name>`; it shows you what changed, and it never touches your files."
+**A second icon beside it: `Update <name>`.** Same rules: the export line on macOS, a visible window, executable, tested by double-click. macOS: after the export, `cd` to the ai-visualizer folder and run `./update.sh`. Windows: `cd /d` to the folder, `call update.bat`, then `pause` so the changelog stays readable instead of the window vanishing. The script does everything itself: shows what is arriving before applying it, wires a zip-downloaded folder to updates on its first run, and can never touch their `ai-visualizer.json`. And when you hand the icons over, say the update half out loud: "if you ever want the newest version, double-click `Update <name>`; it shows you what changed, and it never touches your files."
 
 If they already installed through fullstack-agent, they have these shortcuts already; skip this phase rather than making a second set.
 
