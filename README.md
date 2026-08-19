@@ -78,6 +78,10 @@ Each face is a browser page, so OBS takes it as a browser source pointed at the 
 
 The VT323 typeface by Peter Hull, licensed under the SIL Open Font License 1.1 (see `assets/VT323-OFL.txt`). Everything else here is hand-rolled canvas code with zero dependencies.
 
+## Updating
+
+The visualizer improves continuously, and new faces are planned. To update, say to your agent: **"pull the latest ai-visualizer and tell me what changed."** Or run `git pull` in this folder yourself. Your config and any custom faces you added stay untouched. Installed through fullstack-agent? `./fullstack-agent/update.sh` updates every piece at once and prints what changed.
+
 ## The rest of it
 
 A face is better with a voice behind it. The visualizer performs your real conversations only when a voice line is wired in, and the agent doing the talking is only as good as the memory behind it.

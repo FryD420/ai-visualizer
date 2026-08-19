@@ -102,4 +102,4 @@ If they already installed through fullstack-agent, they have these shortcuts alr
 
 ## Phase 6: Hand it over
 
-Show them the keys (F for fullscreen, Space for the board's cinematic flythrough), the SND toggle on mouse move, and where the config lives. If they stream, point them at the OBS section in the README. Then get out of the way: the face runs itself from here.
+Show them the keys (F for fullscreen, Space for the board's cinematic flythrough), the SND toggle on mouse move, and where the config lives. If they stream, point them at the OBS section in the README. Tell them how updates work: new faces and fixes ship over time, and "pull the latest ai-visualizer and tell me what changed" gets them in any session. Then get out of the way: the face runs itself from here.
