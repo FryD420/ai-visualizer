@@ -342,11 +342,13 @@ function drawThinking(dt){
 }
 
 function drawStateTag(dt,state,alert){
-  const label=alert?"ALERT":state.toUpperCase();
+  // a dead voice line (no heartbeat on the bus) outranks the state word
+  const lost=!AV.alive;
+  const label=alert?"ALERT":lost?"LINK LOST":state.toUpperCase();
   if(label!==tagState){tagState=label;stateTag=new D(`${AV.name} // ${label}`,40);}
   const fs=Math.round(Math.min(W,H)*.032);
   ctx.font=`${fs}px ${UI_FONT}`;ctx.textBaseline="alphabetic";
-  ctx.fillStyle=alert?`rgb(${RED[0]},${RED[1]},${RED[2]})`:"rgb(0,190,60)";
+  ctx.fillStyle=(alert||lost)?`rgb(${RED[0]},${RED[1]},${RED[2]})`:"rgb(0,190,60)";
   ctx.fillText(stateTag.render(dt),18,H-16);
 }
 

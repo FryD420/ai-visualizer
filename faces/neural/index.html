@@ -105,8 +105,14 @@ const N_TENDRILS=46;
 // not merely different in the math.
 const PROFILE={idle:[1.4,.38],listening:[2.6,.50],thinking:[13.0,.95],speaking:[9.0,.78]};
 const BRIGHT_CAP=1.18;                 // color can never clip to white
+// LINK = the voice line's heartbeat (LIVE/LOST), TURN = elapsed time on
+// the turn in flight (mm:ss) — together they tell "thinking hard" from
+// "process dead", which the four states alone cannot.
 const PANEL_ROWS=CLUSTERS.slice(0,N_REGIONS).map((c,i)=>[c[0],i])
-  .concat([["STT",null],["TTS",null],["MEMORY",null],["BUS",null]]);
+  .concat([["STT",null],["TTS",null],["MEMORY",null],["BUS",null],
+           ["LINK",null],["TURN",null]]);
+const mmss=s=>{s=Math.max(0,s|0);
+  return `${String(s/60|0).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`};
 const MONO="13px 'SF Mono',Menlo,Consolas,monospace";
 const MONO_SM="11px 'SF Mono',Menlo,Consolas,monospace";
 const MONO_LG="bold 16px 'SF Mono',Menlo,Consolas,monospace";
@@ -442,6 +448,11 @@ function drawLabels(alert){
 }
 
 function chipFor(name,ri,state,alert){
+  // the link rows speak the truth even under alert: a dead voice line
+  // is the one thing an alert must not paper over
+  if(name==="LINK")return AV.alive?["LIVE",GREEN]:["LOST",RED];
+  if(name==="TURN")return AV.activity?[mmss(AV.activity.turn_age),CYAN]
+    :["--:--",dim2(INK,.6)];
   if(alert)return["FAULT",RED];
   if(Math.random()<.004)chipFlicker[name]=now+300+Math.random()*900;
   const flick=now<(chipFlicker[name]||0);
@@ -459,7 +470,10 @@ function chipFor(name,ri,state,alert){
 function dim2(c,f){return[c[0]*f|0,c[1]*f|0,c[2]*f|0]}
 
 function drawChrome(state,alert,env,t){
-  const ink=alert?RED:INK, inkB=alert?RED:INK_BRIGHT;
+  // a lost heartbeat inks the chrome red like an alert (the brain field
+  // keeps its colour: the process is gone, not the world on fire)
+  const lost=!AV.alive;
+  const ink=(alert||lost)?RED:INK, inkB=(alert||lost)?RED:INK_BRIGHT;
   ctx.strokeStyle=dim(ink,.35);ctx.lineWidth=1;
   ctx.strokeRect(10,10,W-20,H-20);
   const L=26;
@@ -530,10 +544,25 @@ function drawChrome(state,alert,env,t){
     ctx.fillRect(ox+i*4,by+22-bh,3,bh);
   }
 
-  const label=alert?"ALERT":state.toUpperCase();
+  const label=alert?"ALERT":lost?"LINK LOST":state.toUpperCase();
   ctx.font=MONO;ctx.textAlign="center";
-  ctx.fillStyle=alert?dim(RED,1):dim(inkB,.9);
+  ctx.fillStyle=(alert||lost)?dim(RED,1):dim(inkB,.9);
   ctx.fillText(`// ${label}`,W/2,H-40);
+
+  // activity ticker: what the agent is doing right now, bottom centre
+  // above the state word, clipped to the gap between the two meters
+  const act=AV.activity;
+  if(act&&act.line){
+    let line=String(act.line);
+    if(line.length>90)line=line.slice(0,87)+"...";
+    if(act.age>3)line+=` (${act.age|0}s)`;
+    ctx.font=MONO_SM;
+    const maxW=Math.max(80,W-2*232);
+    while(line.length>4&&ctx.measureText(line).width>maxW)
+      line=line.slice(0,line.length-4)+"...";
+    ctx.fillStyle=dim(ink,.6);
+    ctx.fillText(`▸ ${line}`,W/2,H-58);
+  }
   ctx.textAlign="left";
 
   // fps readout (honesty meter)

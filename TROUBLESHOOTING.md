@@ -13,6 +13,10 @@ The face is only as alive as the bus it reads. Work down the chain:
 2. Check where your voice line writes its signals. backtalk's default is its own repo folder. Either set `bus_dir` here to that folder, or set `signals_dir` there to this folder. Both configs need a restart after editing.
 3. While the voice line talks, the bus folder should contain `.voice_state` and `.voice_waveform` with fresh timestamps. `ls -la` them. If they are not updating, the problem is on the voice line's side.
 
+## LINK shows LOST (or SIGNAL BUS OFFLINE, or "LINK LOST")
+
+The face has not seen a fresh `.voice_heartbeat` in 6 s. Either backtalk is not running (or its loop is hung), or the two sides are reading different folders: `bus_dir` in `ai-visualizer.json` must point at the folder backtalk's `signals_dir` writes to (backtalk's default is its own repo folder). `ls -la` the bus folder while backtalk runs; the heartbeat file should rewrite every ~2 s. A voice line that never writes the heartbeat at all will always read LOST.
+
 ## No thinking sound
 
 - Browsers block audio until you interact with a page once. Click anywhere on the face, then trigger a thinking state.

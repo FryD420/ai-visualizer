@@ -67,6 +67,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
   /* bottom bar */
   #micline{position:absolute;bottom:34px;left:56px;font-size:clamp(8px,.6vw,12px);letter-spacing:.3em;color:var(--dim)}
   #micline .lit{color:#8fc4a8}
+  #micline .lost{color:var(--red)}
   #hint{position:absolute;bottom:34px;right:56px;font-size:clamp(8px,.6vw,12px);letter-spacing:.3em;color:var(--dim);text-align:right}
   #hint .proc{color:#8fe8b8;display:none}
   #echo{position:absolute;bottom:76px;left:56px;font-size:clamp(10px,.72vw,14px);letter-spacing:.22em;color:#c5dccf;
@@ -149,7 +150,7 @@ function rgba(h,a){const[r,g,b]=hex2rgb(h);return`rgba(${r},${g},${b},${a})`}
 let now=0;
 const COMMAND="> run system diagnostics";
 let Ecur=.25;
-let busPrev="idle";
+let busPrev="idle", alivePrev=true;
 let lvlS=0, rings=[], lastRing=0;   // smoothed voice level + chip sound-wave rings
 let talkS=0, speakingNowG=false;    // eased talk fade + spawn-time speaking flag
 let listenS=0;                      // eased listening fade (cool cast + inward flow)
@@ -696,6 +697,10 @@ function frame(dt){
   if(AV.state!==busPrev){busPrev=AV.state;syncHUD();
     if(AV.demo&&AV.state==="thinking")echoT=0;
     if(AV.demo&&AV.state==="idle"){echoT=-1;$("echo").innerHTML=""}}
+  // the bus line tells the truth about the voice line's heartbeat
+  if(AV.alive!==alivePrev){alivePrev=AV.alive;
+    $("micline").innerHTML=AV.alive?'SIGNAL BUS - <span class="lit">ONLINE</span>'
+      :'SIGNAL BUS - <span class="lost">OFFLINE</span>';}
   const Et=targetEnergy();
   const [tu,td]=easeTaus();
   Ecur+=(Et-Ecur)*(1-Math.exp(-dt/(Et>Ecur?tu:td)));

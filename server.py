@@ -25,19 +25,28 @@ Serves the face gallery at http://127.0.0.1:8790/ and exposes:
             "level":  0.0-1.0,       voice loudness while speaking
             "samples": [64 floats],  raw waveform snapshot (0s when quiet)
             "alert":  bool,          optional attention signal
-            "loading": bool}         true while the voice line plays its
+            "loading": bool,         true while the voice line plays its
                                      own thinking sound (we stay quiet)
+            "alive":  bool,          the voice line's heartbeat is fresh
+                                     (< 6 s old); false = dead or hung
+            "activity": null | {"line": "Read: foo.py",  what the agent is
+                                "age": 1.2,              doing; s since the
+                                "turn_age": 14.8}}       line / turn began
   /config  the merged ai-visualizer.json plus the list of installed
            faces, discovered by scanning the faces/ folder. Drop a new
            folder with an index.html into faces/ and it appears in the
            gallery. That is the whole plugin system.
 
-READ-ONLY on the signal bus. The bus is three tiny files written by a
-voice line (backtalk writes them natively, github.com/jaredrhod/backtalk):
+READ-ONLY on the signal bus. The bus is a handful of tiny files written
+by a voice line (backtalk writes them natively, github.com/jaredrhod/backtalk):
 
   .voice_state        idle | listening | thinking | speaking
   .voice_waveform     JSON {ts, samples: [64 floats]} while audio plays
   .voice_loading_pid  exists while the voice line plays a thinking sound
+  .voice_heartbeat    unix time as text, rewritten every ~2 s while the
+                      voice line is alive (missing/stale = dead or hung)
+  .voice_activity     JSON {ts, turn_started, line} during a turn: what
+                      the agent is doing right now; gone when it ends
   .voice_alert        optional: non-empty file = attention needed
 
 Where the bus lives comes from "bus_dir" in ai-visualizer.json (default:
@@ -66,6 +75,10 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 STATES = {"idle", "listening", "thinking", "speaking"}
 WAVEFORM_STALE_S = 0.6
+HEARTBEAT_STALE_S = 6.0      # the voice line beats every ~2 s
+MOCK_ACTIVITY = ["Bash: running the build",
+                 "Read: src/main/java/Tablet.java",
+                 "Grep: mod_version in gradle.properties"]
 
 DEFAULTS = {
     "name": "JARVIS",       # shown on the chip / headers, yours to change
@@ -135,8 +148,52 @@ def mock_bus():
             * 9000.0 * (0.35 + 0.65 * abs(math.sin(t * 2.6)))
             for i in range(64)
         ]
+    activity = None
+    if MOCK in ("thinking", "speaking"):
+        # a fake turn in flight: the line cycles every 4 s, the turn
+        # clock wraps every 90 s, so every face's ticker has something
+        activity = {"line": MOCK_ACTIVITY[int(t / 4) % len(MOCK_ACTIVITY)],
+                    "age": round(t % 4, 2), "turn_age": round(t % 90, 2)}
     return {"state": MOCK, "level": level, "samples": samples,
-            "alert": False, "loading": MOCK == "thinking"}
+            "alert": False, "loading": MOCK == "thinking",
+            "alive": True, "activity": activity}
+
+
+_last_activity = (None, 0.0)    # last good parse, for mid-write blips
+
+
+def read_activity():
+    """The .voice_activity file as {"line", "age", "turn_age"}, or None
+    when absent. A torn read (the writer mid-rewrite) reuses the last
+    good parse for up to a second instead of blinking the face."""
+    global _last_activity
+    now = time.time()
+    try:
+        text = (BUS / ".voice_activity").read_text()
+    except OSError:
+        _last_activity = (None, 0.0)
+        return None
+    try:
+        a = json.loads(text)
+        ts = float(a.get("ts") or now)
+        started = float(a.get("turn_started") or ts)
+        out = {"line": str(a.get("line") or ""),
+               "age": round(max(0.0, now - ts), 2),
+               "turn_age": round(max(0.0, now - started), 2)}
+        _last_activity = (out, now)
+        return out
+    except (ValueError, TypeError, AttributeError):
+        last, at = _last_activity
+        return last if last and now - at < 1.0 else None
+
+
+def read_alive():
+    """True while the voice line's heartbeat is fresh."""
+    try:
+        beat = float((BUS / ".voice_heartbeat").read_text().strip())
+        return (time.time() - beat) < HEARTBEAT_STALE_S
+    except (OSError, ValueError, TypeError):
+        return False
 
 
 def read_bus():
@@ -168,7 +225,8 @@ def read_bus():
         alert = False
     loading = (BUS / ".voice_loading_pid").exists()
     return {"state": state, "level": level, "samples": samples,
-            "alert": alert, "loading": loading}
+            "alert": alert, "loading": loading,
+            "alive": read_alive(), "activity": read_activity()}
 
 
 class Handler(BaseHTTPRequestHandler):

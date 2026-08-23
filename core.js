@@ -30,6 +30,11 @@
                    adaptively normalized — use this for motion)
      AV.samples    Float32Array(64), 0..1 normalized waveform ring
      AV.alert      bool, optional attention signal
+     AV.alive      bool, the voice line's heartbeat is fresh (true when
+                   the server predates heartbeats, so nothing cries LOST)
+     AV.activity   null, or {line, age, turn_age}: what the agent is
+                   doing right now ("Read: foo.py"), seconds since that
+                   line was written, seconds since the turn began
      AV.micLevel   0..1 your microphone (only if init({mic:true}))
      AV.name       display name from config ("JARVIS" by default)
      AV.label      the dotted chip label ("J.A.R.V.I.S.")
@@ -65,6 +70,7 @@ const AV = (() => {
 
   const A = {
     state: "idle", level: 0, env: 0, alert: false, micLevel: 0,
+    alive: true, activity: null,
     samples: new Float32Array(64),
     name: "JARVIS", label: "J.A.R.V.I.S.", badge: "",
     demo: DEMO, shot: SHOT, faces: [],
@@ -92,7 +98,7 @@ const AV = (() => {
 
   /* ------------------------------ bus polling ------------------------------ */
   let raw = { state: "idle", level: 0, samples: null, alert: false,
-              loading: false };
+              loading: false, alive: true, activity: null };
   if (!DEMO) {
     setInterval(async () => {
       try {
@@ -106,20 +112,32 @@ const AV = (() => {
   // A scripted voice turn: the face performs everything with no voice line.
   const SCRIPT = [["idle", 6000], ["listening", 3500], ["thinking", 4200],
                   ["speaking", 8500]];
+  // what the scripted agent is "doing" while the demo thinks (the
+  // activity ticker); one line per ~1.4 s of the thinking segment
+  const DEMO_ACTIVITY = ["Read: src/main/java/Tablet.java",
+                         "Bash: ./gradlew build",
+                         "Grep: mod_version in gradle.properties"];
   let demoT = 0, demoClock = 0;
   const PIN = SHOT || Q.get("state");   // ?state=speaking pins the demo
   function demoUpdate(dt) {
     demoClock += dt;
     let st = PIN || "idle";
+    let segT = demoClock;                 // ms into the current segment
     if (!PIN) {
       demoT = (demoT + dt) % SCRIPT.reduce((a, s) => a + s[1], 0);
       let t = demoT;
       for (const [name, len] of SCRIPT) {
-        if (t < len) { st = name; break; }
+        if (t < len) { st = name; segT = t; break; }
         t -= len;
       }
     }
     const tt = demoClock / 1000;
+    let activity = null;
+    if (st === "thinking") {
+      const i = Math.floor(segT / 1400) % DEMO_ACTIVITY.length;
+      activity = { line: DEMO_ACTIVITY[i], age: (segT % 1400) / 1000,
+                   turn_age: segT / 1000 };
+    }
     const speaking = st === "speaking";
     const cadence = speaking
       ? Math.max(0, Math.sin(tt * 2.1) * 0.6 + Math.sin(tt * 0.9) * 0.5)
@@ -136,7 +154,7 @@ const AV = (() => {
         : 0;
     }
     raw = { state: st, level: speaking ? Math.min(1, cadence) : 0,
-            samples, alert: false, loading: false };
+            samples, alert: false, loading: false, alive: true, activity };
     if (st === "listening")
       A.micLevel = 0.25 + 0.55 * Math.abs(Math.sin(tt * 2.7))
         * Math.abs(Math.sin(tt * 0.61));
@@ -149,6 +167,11 @@ const AV = (() => {
     A.state = raw.state || "idle";
     A.alert = !!raw.alert;
     A.level = raw.level || 0;
+    // a server that predates the heartbeat never sends "alive": that is
+    // "unknown", not "dead" — only an explicit false reads as LOST
+    A.alive = raw.alive === undefined || raw.alive === null ? true : !!raw.alive;
+    A.activity = (raw.activity && typeof raw.activity === "object")
+      ? raw.activity : null;
 
     // adaptive envelope: normalize against a decaying peak, then ease
     // (attack 50ms, release 350ms) — motion code rides AV.env

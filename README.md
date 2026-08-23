@@ -45,15 +45,17 @@ Or run the server itself in mock mode and every face rides the synthetic bus: `.
 
 ## Wire your voice
 
-The faces read three tiny files, the same signal-bus contract [backtalk](https://github.com/jaredrhod/backtalk) writes natively:
+The faces read a few tiny files, the same signal-bus contract [backtalk](https://github.com/jaredrhod/backtalk) writes natively:
 
 ```
 .voice_state        idle | listening | thinking | speaking
 .voice_waveform     JSON {ts, samples: [64 floats]} while audio plays
 .voice_loading_pid  exists while the voice line plays a thinking sound
+.voice_heartbeat    unix time as text, rewritten every ~2 s while the voice line is alive (stale = LINK LOST)
+.voice_activity     JSON {ts, turn_started, line} during a turn: what the agent is doing right now
 ```
 
-Point them at each other in either direction: set `bus_dir` in `ai-visualizer.json` to your backtalk folder, or set `signals_dir` in backtalk's config to this folder. Restart both, say something, and the face performs the real conversation. Anything else that writes those three files works exactly the same, so a custom voice line can drive the faces too.
+Point them at each other in either direction: set `bus_dir` in `ai-visualizer.json` to your backtalk folder, or set `signals_dir` in backtalk's config to this folder. Restart both, say something, and the face performs the real conversation. Anything else that writes the first three files works exactly the same, so a custom voice line can drive the faces too; the last two are optional, but a voice line that never writes `.voice_heartbeat` will show its LINK as LOST.
 
 ## The thinking sound
 
