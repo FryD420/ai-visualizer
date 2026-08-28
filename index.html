@@ -81,6 +81,16 @@ const FALLBACK=[
   {id:"neural",title:"Neural Core",tagline:"A constellation brain: nine labeled color islands, a white crescent, traveling thought-pulses."},
 ];
 let deflt="board";
+/* Which face you last opened, so a shell that embeds this gallery in a
+   panel (the Jarvis desktop app) reopens the face you chose instead of
+   dropping you back on the picker every launch. Kept in localStorage
+   rather than the server config on purpose: it is a per-VIEWER
+   preference, while "face" in ai-visualizer.json stays the machine's
+   configured default. Reach the picker again from any face's
+   "gallery" link, which lands here as ?pick=1. */
+const LAST_KEY="av.lastFace";
+function remember(id){try{localStorage.setItem(LAST_KEY,id);}catch(e){}}
+function lastFace(){try{return localStorage.getItem(LAST_KEY);}catch(e){return null;}}
 AV.init({sound:false});
 AV.ready(a=>{
   document.getElementById("who").textContent=a.name.toUpperCase();
@@ -90,6 +100,17 @@ AV.ready(a=>{
     .catch(()=>render(faces));
 });
 function render(faces){
+  // Jump straight to the remembered face — but only if it still EXISTS
+  // (a removed faces/ folder would otherwise 404 forever with no way
+  // back), and never when the picker was asked for explicitly.
+  const last=lastFace();
+  if(last&&new URLSearchParams(location.search).get("pick")!=="1"
+     &&faces.some(f=>f.id===last)){
+    // replace(), not href: the picker must not sit in history, or Back
+    // from a face bounces through it and straight forward again.
+    location.replace(`faces/${last}/index.html`);
+    return;
+  }
   const cards=document.getElementById("cards");
   cards.innerHTML="";
   faces.forEach((f,i)=>{
@@ -101,13 +122,15 @@ function render(faces){
       `<span class="key">${i+1}</span>`+
       `<div class="tag">${f.tagline||""}</div>`+
       `<div class="demo">&gt; watch the demo</div>`;
+    a.addEventListener("click",()=>remember(f.id));
     a.querySelector(".demo").addEventListener("click",e=>{
       e.preventDefault();e.stopPropagation();
+      // A demo is a look, not a choice — deliberately not remembered.
       location.href=`faces/${f.id}/index.html?demo=1`;
     });
     cards.appendChild(a);
     addEventListener("keydown",e=>{
-      if(e.key===String(i+1))location.href=`faces/${f.id}/index.html`;
+      if(e.key===String(i+1)){remember(f.id);location.href=`faces/${f.id}/index.html`;}
     });
   });
 }

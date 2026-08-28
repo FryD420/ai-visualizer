@@ -35,7 +35,7 @@ That starts the server and opens the default face (the board, unless you change 
 
 **Already in a Claude Code session with your agent?** One sentence does the whole install: *"clone https://github.com/jaredrhod/ai-visualizer.git, then read ai-visualizer/ai-visualizer.md and set me up."* Your agent clones it, runs the wizard, and wires it in for you.
 
-**The manual way:** copy `ai-visualizer.json.example` to `ai-visualizer.json` (your copy is untracked, so updates never touch it), then edit it. Set `name` to your agent's name (it goes on the chip and in every HUD), and `face` to the one the root URL should open.
+**The manual way:** copy `ai-visualizer.json.example` to `ai-visualizer.json` (your copy is untracked, so updates never touch it), then edit it. Set `name` to your agent's name (it goes on the chip and in every HUD), and `face` to the one the root URL should open. Set `"open_browser": false` if something else already shows the face — a desktop shell, an embedded panel — and a second window on every start is just clutter (`--no-open` does the same thing for one run).
 
 ## See it perform with no voice line
 

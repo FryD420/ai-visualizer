@@ -309,8 +309,36 @@ const AV = (() => {
   };
 
   /* ---------------------------------- init --------------------------------- */
+  /* --------------------------- back to the picker -------------------------- */
+  /* Face pages had no way back to the gallery: fine when the browser's own
+     chrome is there, useless inside an embedded panel with no address bar.
+     One control here covers every face, since they all load this script.
+     Lands on the gallery as ?pick=1 so it shows the picker instead of
+     bouncing straight back to the remembered face. Skipped on the gallery
+     itself, and while capturing a screenshot (?shot=) so it never appears
+     in shipped art. */
+  function galleryLink() {
+    if (SHOT) return;
+    if (!/\/faces\//.test(location.pathname)) return;
+    const a = document.createElement("a");
+    a.textContent = "gallery";
+    a.href = new URL("?pick=1", ROOT).href;
+    a.setAttribute("aria-label", "Back to the face gallery");
+    a.style.cssText = "position:fixed;left:10px;bottom:8px;z-index:9999;" +
+      "font:11px/1 ui-monospace,Consolas,monospace;letter-spacing:.14em;" +
+      "text-transform:uppercase;color:#8aa;text-decoration:none;opacity:.28;" +
+      "padding:5px 8px;border:1px solid currentColor;border-radius:3px;" +
+      "transition:opacity .18s";
+    a.addEventListener("mouseenter", () => { a.style.opacity = ".85"; });
+    a.addEventListener("mouseleave", () => { a.style.opacity = ".28"; });
+    const add = () => document.body && document.body.appendChild(a);
+    if (document.body) add();
+    else addEventListener("DOMContentLoaded", add, { once: true });
+  }
+
   A.init = (opts = {}) => {
     A._mic = !!opts.mic;
+    galleryLink();
     if (A._mic && !DEMO) micStart();
     if (opts.sound !== false) soundInit(); else A._sndWant = false;
     if (DEMO) {

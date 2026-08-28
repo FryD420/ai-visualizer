@@ -60,6 +60,8 @@ Run:
                                 the chosen state (idle|listening|thinking
                                 |speaking) so you can see a face perform
   python3 server.py --no-open   do not auto-open the browser
+                                (or set "open_browser": false in
+                                ai-visualizer.json to make it permanent)
 Ctrl-C stops.
 """
 import json
@@ -87,6 +89,10 @@ DEFAULTS = {
     "port": 8790,
     "bus_dir": "",          # where the .voice_* files live ("" = here)
     "thinking_sound": True, # play assets/thinking.wav while thinking
+    "open_browser": True,   # auto-open a browser on startup; set false when
+                            # something else already embeds the face (a
+                            # desktop shell, an iframe panel) and a second
+                            # window is just clutter
 }
 
 
@@ -108,7 +114,10 @@ CFG = load_config()
 BUS = Path(CFG["bus_dir"]).expanduser() if CFG.get("bus_dir") else HERE
 
 MOCK = None
-NO_OPEN = "--no-open" in sys.argv
+# Either switch suppresses it: the flag is the one-off, the config key is
+# the standing preference. Never AND them — a config that says "don't open"
+# must not be overridden by the absence of a flag.
+NO_OPEN = "--no-open" in sys.argv or not CFG.get("open_browser", True)
 if "--mock" in sys.argv:
     i = sys.argv.index("--mock")
     MOCK = sys.argv[i + 1] if len(sys.argv) > i + 1 else "speaking"
