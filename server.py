@@ -60,6 +60,8 @@ import sys
 import threading
 import time
 import webbrowser
+import urllib.request
+import errno
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -186,11 +188,24 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(json.dumps(out).encode(), "application/json")
             else:
                 self._static(path)
-        except BrokenPipeError:
+        except ConnectionError:
+            # THE WHOLE FAMILY, not one member of it. A tab closed or
+            # reloaded mid-response raises ConnectionResetError, which is a
+            # SIBLING of BrokenPipeError rather than a subclass -- so
+            # catching only BrokenPipeError sent it to the generic branch
+            # below, which then wrote a 500 back down the socket that had
+            # just died and raised a SECOND, uncaught error from inside
+            # flush_headers(). One disconnect, two tracebacks. ConnectionError
+            # is the common parent of Reset, Broken, Aborted and Refused.
             pass
         except Exception as e:
             body = json.dumps({"error": str(e)}).encode()
-            self._send(body, "application/json", 500)
+            try:
+                self._send(body, "application/json", 500)
+            except ConnectionError:
+                # A real error AND the client already gone. There is nobody
+                # left to tell; saying so twice helps no one.
+                pass
 
     def _static(self, path):
         if path == "/":
@@ -226,9 +241,38 @@ if __name__ == "__main__":
     # The browser opens on the configured face; the gallery stays at "/" for switching.
     face = CFG.get("face", "")
     url = f"{root}faces/{face}/" if face and (HERE / "faces" / face / "index.html").exists() else root
-    print(f"ai-visualizer on {root}  opening {url}  ({mode})  Ctrl-C stops", flush=True)
-    srv = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
+    # ALREADY RUNNING IS NOT AN ERROR, and treating it as one was the whole
+    # bug. Closing the browser tab does not stop this server; it keeps going
+    # headless. Relaunching then failed to bind, died before the line that
+    # opens the browser, and took the traceback with it when the launcher
+    # window closed. The end-user symptom was "I can hear my agent but the
+    # face never shows up", with the face running perfectly the entire time.
+    try:
+        srv = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
+    except OSError as e:
+        if e.errno not in (errno.EADDRINUSE, errno.EACCES):
+            raise
+        # Something holds the port. Ask it whether it is us before claiming
+        # anything: a stranger on this port is a different problem and
+        # deserves a different sentence.
+        mine = False
+        try:
+            with urllib.request.urlopen(root + "state", timeout=2) as r:
+                mine = r.status == 200
+        except Exception:
+            mine = False
+        if mine:
+            print(f"already running at {root}  opening it instead", flush=True)
+            if not NO_OPEN:
+                webbrowser.open(url)
+            sys.exit(0)
+        print(f"port {PORT} is taken by something that is not this server.",
+              flush=True)
+        print("Close whatever is using it, or set a different \"port\" in "
+              "ai-visualizer.json.", flush=True)
+        sys.exit(1)
     srv.allow_reuse_address = True
+    print(f"ai-visualizer on {root}  opening {url}  ({mode})  Ctrl-C stops", flush=True)
     if not NO_OPEN:
         threading.Timer(0.6, lambda: webbrowser.open(url)).start()
     try:
