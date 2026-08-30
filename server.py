@@ -138,7 +138,13 @@ def mock_bus():
             for i in range(64)
         ]
     return {"state": MOCK, "level": level, "samples": samples,
-            "alert": False, "loading": MOCK == "thinking"}
+            "alert": False, "loading": MOCK == "thinking",
+            # Faked so the usage readout can be looked at without
+            # spending a real session to make it appear.
+            "rate_limits": {
+                "five_hour": {"utilization": 0.34, "resets_at": t + 9200},
+                "seven_day": {"utilization": 0.61, "resets_at": t + 288000},
+            }}
 
 
 def read_bus():
@@ -169,8 +175,16 @@ def read_bus():
     except OSError:
         alert = False
     loading = (BUS / ".voice_loading_pid").exists()
+    # Absent unless the voice line was told to publish it, which is the
+    # normal case: it is the account holder's own spend and it stays off
+    # until asked for. An empty dict simply means no readout.
+    rate_limits = {}
+    try:
+        rate_limits = json.loads((BUS / ".voice_rate_limits").read_text())
+    except (OSError, ValueError):
+        pass
     return {"state": state, "level": level, "samples": samples,
-            "alert": alert, "loading": loading}
+            "alert": alert, "loading": loading, "rate_limits": rate_limits}
 
 
 class Handler(BaseHTTPRequestHandler):

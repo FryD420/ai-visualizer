@@ -148,6 +148,9 @@ const AV = (() => {
     if (DEMO) demoUpdate(dt);
     A.state = raw.state || "idle";
     A.alert = !!raw.alert;
+    // Empty unless the voice line was told to publish usage. A face that
+    // wants to draw it reads AV.rateLimits; every other face ignores it.
+    A.rateLimits = raw.rate_limits || {};
     A.level = raw.level || 0;
 
     // adaptive envelope: normalize against a decaying peak, then ease
