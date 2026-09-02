@@ -84,7 +84,7 @@ The VT323 typeface by Peter Hull, licensed under the SIL Open Font License 1.1 (
 
 ## Updating
 
-The visualizer improves continuously, and new faces are planned. To update, double-click the `Update` icon setup left on your Desktop, or run `./update.sh` (`update.bat` on Windows) in this folder: either shows you what changed before applying it. Saying **"pull the latest ai-visualizer and tell me what changed"** to your agent works too. Your config and any custom faces you added stay untouched. Installed through fullstack-agent? `./fullstack-agent/update.sh` updates every piece at once and prints what changed.
+The visualizer improves continuously, and new faces are planned. To update on macOS, double-click the `Update` icon setup left on your Desktop, or run `./update.sh` in this folder. On Windows, or any time, say **"pull the latest ai-visualizer and tell me what changed"** to your agent — it does the same job. Your config and any custom faces you added stay untouched. Installed through fullstack-agent? `./fullstack-agent/update.sh` (macOS) updates every piece at once and prints what changed.
 
 ## The rest of it
 
@@ -93,7 +93,7 @@ A face is better with a voice behind it. The visualizer performs your real conve
 - **The whole stack, one command.** [fullstack-agent](https://github.com/jaredrhod/fullstack-agent) installs the memory, the voice, the face, and the hands, and wires them together for you. Pick only the pieces you want: https://jaredrhod.com
 - **The videos.** Free series on all of it: https://youtube.com/@jaredrhod
 - **The Discord.** Thousands of builders, and the fastest place to get unstuck: https://discord.gg/YSdsqMv3V8
-- **Everything else,** free and open source: https://jaredrhod.com
+- **Everything else,** free and open: https://jaredrhod.com
 
 ## Support
 
