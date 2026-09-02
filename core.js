@@ -96,16 +96,44 @@ const AV = (() => {
 
   A.ready = cb => { A._ready ? cb(A) : A._readyCbs.push(cb); };
 
-  /* ------------------------------ bus polling ------------------------------ */
+  /* -------------------------------- bus feed -------------------------------- */
+  // Push beats poll: state lands the instant it changes instead of waiting
+  // up to 120ms for the next tick. /events is preferred; the 120ms poll is
+  // the fallback for an older server (no /events route), a connection that
+  // errors, or one that just never opens. Only one of the two ever runs —
+  // switching between them always tears the other down first, so nothing
+  // doubles up or leaks an interval/connection.
   let raw = { state: "idle", level: 0, samples: null, alert: false,
               loading: false, alive: true, activity: null };
   if (!DEMO) {
-    setInterval(async () => {
-      try {
-        const r = await fetch("/state", { cache: "no-store" });
-        raw = await r.json();
-      } catch (e) { /* server gone: hold last state */ }
-    }, 120);
+    let pollTimer = null;
+    const startPolling = () => {
+      if (pollTimer) return;
+      pollTimer = setInterval(async () => {
+        try {
+          const r = await fetch("/state", { cache: "no-store" });
+          raw = await r.json();
+        } catch (e) { /* server gone: hold last state */ }
+      }, 120);
+    };
+    const stopPolling = () => {
+      if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    };
+    try {
+      const es = new EventSource("/events");
+      // belt-and-suspenders: if the stream neither opens nor errors within
+      // a second (a proxy or firewall just swallowing it silently), poll
+      // anyway rather than sit dark waiting on an event that may never fire
+      const openTimer = setTimeout(startPolling, 1000);
+      es.onopen = () => { clearTimeout(openTimer); stopPolling(); };
+      es.onmessage = (ev) => {
+        try { raw = JSON.parse(ev.data); } catch (e) { /* torn frame */ }
+      };
+      es.onerror = () => { clearTimeout(openTimer); startPolling(); };
+    } catch (e) {
+      // EventSource itself unsupported/unavailable: poll from the start
+      startPolling();
+    }
   }
 
   /* ------------------------------ demo driver ------------------------------ */

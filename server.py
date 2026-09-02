@@ -32,6 +32,10 @@ Serves the face gallery at http://127.0.0.1:8790/ and exposes:
             "activity": null | {"line": "Read: foo.py",  what the agent is
                                 "age": 1.2,              doing; s since the
                                 "turn_age": 14.8}}       line / turn began
+  /events  Server-Sent Events push of the same payload as /state, sent the
+           instant it changes instead of waiting on the next poll tick.
+           This is what core.js prefers; /state keeps working unchanged
+           underneath it as the fallback for older clients.
   /config  the merged ai-visualizer.json plus the list of installed
            faces, discovered by scanning the faces/ folder. Drop a new
            folder with an index.html into faces/ and it appears in the
@@ -67,6 +71,8 @@ Ctrl-C stops.
 import json
 import math
 import mimetypes
+import queue
+import socket
 import sys
 import threading
 import time
@@ -238,6 +244,43 @@ def read_bus():
             "alive": read_alive(), "activity": read_activity()}
 
 
+BROADCAST_PERIOD_S = 0.03   # ~33/s sampling: fast enough that push beats
+                            # the old 120ms poll on both worst case and
+                            # average, cheap enough to run forever
+SSE_HEARTBEAT_S = 15.0      # keeps idle connections alive through proxies
+                            # / browsers that time out a quiet socket
+SSE_WRITE_TIMEOUT_S = 20.0  # bounds how long a wedged client (TCP window
+                            # full, never reading) can hold its thread
+
+_subscribers = []           # list[queue.Queue] of connected /events clients
+_subscribers_lock = threading.Lock()
+
+
+def _broadcast_bus():
+    """Background thread: samples read_bus() fast and fans out a frame to
+    every connected /events client, but ONLY when the payload changed —
+    an idle face produces zero SSE traffic, which is half the point of
+    replacing the poll. Runs for the life of the process; daemonized so
+    it never blocks shutdown."""
+    last = None
+    while True:
+        try:
+            encoded = json.dumps(read_bus())
+            if encoded != last:
+                last = encoded
+                with _subscribers_lock:
+                    subs = list(_subscribers)
+                for q in subs:
+                    try:
+                        q.put_nowait(encoded)
+                    except queue.Full:
+                        pass  # a slow/wedged client falls behind rather
+                              # than stalling the broadcaster for everyone
+        except Exception:
+            pass  # never let one bad sample kill the only broadcaster
+        time.sleep(BROADCAST_PERIOD_S)
+
+
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         path = self.path.split("?")[0]
@@ -245,6 +288,8 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/state":
                 self._send(json.dumps(read_bus()).encode(),
                            "application/json")
+            elif path == "/events":
+                self._events()
             elif path == "/config":
                 out = {"name": CFG["name"], "badge": CFG["badge"],
                        "face": CFG["face"],
@@ -275,6 +320,52 @@ class Handler(BaseHTTPRequestHandler):
             "application/octet-stream"
         self._send(target.read_bytes(), ctype)
 
+    def _events(self):
+        """Long-lived SSE stream: one dedicated thread per connected client
+        (ThreadingHTTPServer gives us that for free), parked in a queue.get
+        loop so it does no work between frames. Handles its own exceptions
+        end to end — a dropped client must not fall through to do_GET's
+        error path and try to send a second HTTP response on a socket
+        that's already answered once."""
+        q = queue.Queue(maxsize=10)
+        with _subscribers_lock:
+            _subscribers.append(q)
+        try:
+            # bounds a wedged client (connected but never draining its
+            # socket buffer) to one stuck write instead of a thread held
+            # forever
+            self.connection.settimeout(SSE_WRITE_TIMEOUT_S)
+            self.send_response(200)
+            self.send_header("Content-Type", "text/event-stream")
+            self.send_header("Cache-Control", "no-cache")
+            self.send_header("Connection", "keep-alive")
+            self.end_headers()
+            # prime the new client immediately so it isn't blank until the
+            # next state change — same first frame /state would give it
+            self.wfile.write(f"data: {json.dumps(read_bus())}\n\n".encode())
+            self.wfile.flush()
+            last_sent = time.time()
+            while True:
+                try:
+                    encoded = q.get(timeout=1.0)
+                    self.wfile.write(f"data: {encoded}\n\n".encode())
+                    self.wfile.flush()
+                    last_sent = time.time()
+                except queue.Empty:
+                    if time.time() - last_sent >= SSE_HEARTBEAT_S:
+                        self.wfile.write(b": ping\n\n")
+                        self.wfile.flush()
+                        last_sent = time.time()
+        except (BrokenPipeError, ConnectionResetError, socket.timeout,
+                OSError):
+            pass  # client gone or wedged: quietly stop, no console spam
+        finally:
+            with _subscribers_lock:
+                try:
+                    _subscribers.remove(q)
+                except ValueError:
+                    pass
+
     def _send(self, body, ctype, code=200):
         self.send_response(code)
         self.send_header("Content-Type", ctype)
@@ -296,6 +387,7 @@ if __name__ == "__main__":
     print(f"ai-visualizer on {root}  opening {url}  ({mode})  Ctrl-C stops", flush=True)
     srv = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
     srv.allow_reuse_address = True
+    threading.Thread(target=_broadcast_bus, daemon=True).start()
     if not NO_OPEN:
         threading.Timer(0.6, lambda: webbrowser.open(url)).start()
     try:
